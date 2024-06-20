@@ -4,89 +4,68 @@ from time import time
 
 class Client:
     """
-    Classe représentant un client dans la blockchain.
-
-    Attributs:
-        nom (str): Le nom du client.
-        solde (float): Le solde du client.
+    Représente un client dans le système de la blockchain.
     """
     
     def __init__(self, nom, solde_initial):
+        """
+        Initialise un nouveau client avec un nom et un solde initial.
+        """
         self.nom = nom  # Nom du client
         self.solde = solde_initial  # Solde du client
 
     def debiter(self, montant):
         """
         Débite le solde du client.
-
-        Variables:
-            montant (float): Le montant à débiter.
         """
         self.solde -= montant
 
     def crediter(self, montant):
         """
         Crédite le solde du client.
-
-        Variables:
-            montant (float): Le montant à créditer.
         """
         self.solde += montant
 
 class Noeud:
     """
-    Classe représentant un nœud dans l'arbre Merkle.
-
-    Attributs:
-        data (str): Les données du nœud (hachage).
-        left (Noeud): Le nœud fils gauche.
-        right (Noeud): Le nœud fils droit.
+    Représente un nœud dans la construction d'un arbre.
     """
     
     def __init__(self, data):
+        """
+        Initialise un nœud avec des données.
+        """
         self.data = data  # Données du nœud
         self.left = None  # Référence vers le nœud gauche
         self.right = None  # Référence vers le nœud droit
 
     def est_feuille(self):
         """
-        Vérifie si le nœud est une feuille (n'a pas d'enfants).
-
-        Retour:
-            bool: True si le nœud est une feuille, sinon False.
+        Vérifie si le nœud est une feuille (sans nœuds enfants).
         """
         return self.left is None and self.right is None
 
 class ArbreMerkle:
     """
-    Classe représentant un arbre Merkle.
-
-    Attributs:
-        racine (Noeud): Le nœud racine de l'arbre.
-        racine_merkle (str): Le hachage de la racine Merkle.
+    Représente un arbre de Merkle utilisé pour la vérification des transactions.
     """
+    
     def __init__(self):
+        """
+        Initialise un arbre de Merkle avec une racine et une racine de Merkle.
+        """
         self.racine = None  # Racine de l'arbre
         self.racine_merkle = None  # Racine de Merkle de l'arbre
 
     def fonction_hachage(self, data):
         """
-        Calcule le hachage SHA-256 d'une chaîne de caractères.
-
-        Variables:
-            data (str): La chaîne de caractères à hacher.
-
-        Retour:
-            str: Le hachage résultant.
+        Effectue une fonction de hachage SHA-256 sur les données.
         """
         return hashlib.sha256(data.encode()).hexdigest()
 
-    def build_arbre(self, transactions):
+    def build_arbre_merkle(self, transactions):
         """
-        Construit l'arbre Merkle à partir d'une liste de transactions.
-
-        Variables:
-            transactions (list): Liste des transactions (chaînes de caractères).
+        Construit l'arbre de Merkle à partir d'une liste de transactions.
         """
         noeuds = [Noeud(self.fonction_hachage(t)) for t in transactions]
         if len(noeuds) == 0:
@@ -98,8 +77,8 @@ class ArbreMerkle:
                 noeud2 = noeuds[i + 1] if i + 1 < len(noeuds) else Noeud(noeuds[i].data)
                 hash_data = noeud1.data + noeud2.data
                 parent = Noeud(self.fonction_hachage(hash_data))
-                parent.left = noeud1  # type: ignore
-                parent.right = noeud2 # type: ignore
+                parent.left = noeud1
+                parent.right = noeud2
                 new_level_tree.append(parent)
             noeuds = new_level_tree
         self.racine = noeuds[0]
@@ -107,22 +86,13 @@ class ArbreMerkle:
 
     def obtenir_racine_merkle(self):
         """
-        Renvoie le hachage de la racine Merkle.
-
-        Retour:
-            str: Le hachage de la racine Merkle.
+        Obtient la racine de Merkle de l'arbre.
         """
         return self.racine_merkle
 
     def verifier_transaction(self, transaction):
         """
-        Vérifie si une transaction est valide dans l'arbre Merkle.
-
-        Variables:
-            transaction (str): La transaction à vérifier (chaîne de caractères).
-
-        Retour:
-            bool: True si la transaction est valide, sinon False.
+        Vérifie si une transaction donnée existe dans l'arbre de Merkle.
         """
         hash_transaction = self.fonction_hachage(transaction)
         noeud_courant = self.racine
@@ -142,31 +112,23 @@ class ArbreMerkle:
 
 class Blockchain:
     """
-    Classe représentant une blockchain.
-
-    Attributs:
-        chaine (list): La chaîne de blocs.
-        transactions_courantes (list): Liste des transactions en attente.
-        arbre_merkle (ArbreMerkle): L'arbre Merkle pour les transactions.
-        clients (dict): Dictionnaire des clients (identifiant -> Client).
+    Représente une blockchain pour gérer les transactions et les blocs.
     """
+
     def __init__(self):
+        """
+        Initialise une nouvelle blockchain avec une chaîne vide et d'autres éléments nécessaires.
+        """
         self.chaine = []  # Chaîne de blocs
-        self.transactions_courantes = []  # Liste des transactions en attente
-        self.arbre_merkle = ArbreMerkle()  # Arbre de Merkle pour les transactions
+        self.transactions_courantes = []  # Liste des transactions actuelles
+        self.arbre_merkle = ArbreMerkle()  # Arbre de Merkle 
         self.clients = {}  # Clients de la blockchain
         self.charger_clients()  # Charge les clients à partir d'un fichier JSON
         self.nouveau_bloc(proof=1000, hash_precedent=1)  # Crée le premier bloc initial
 
-
     def ajouter_client(self, identifiant, nom, solde_initial):
         """
         Ajoute un nouveau client à la blockchain.
-
-        Variables:
-            identifiant (str): L'identifiant unique du client.
-            nom (str): Le nom du client.
-            solde_initial (float): Le solde initial du client.
         """
         if identifiant not in self.clients:
             self.clients[identifiant] = Client(nom, solde_initial)
@@ -202,10 +164,7 @@ class Blockchain:
 
     def process_transactions(self):
         """
-        Traite les transactions en mettant à jour les soldes des clients.
-
-        Retour:
-            bool: True si toutes les transactions sont valides, sinon False.
+        Traite les transactions courantes en débitant et créditant les comptes des clients.
         """
         for transac in self.transactions_courantes:
             envoyeur = transac['envoyeur']
@@ -220,16 +179,9 @@ class Blockchain:
 
     def nouveau_bloc(self, proof, hash_precedent=None):
         """
-        Crée un nouveau bloc dans la chaîne.
-
-        Variables:
-            proof (int): La preuve de travail (Proof of Work) du bloc.
-            hash_precedent (str): Le hachage du bloc précédent (facultatif).
-
-        Retour:
-            dict: Le nouveau bloc créé.
+        Crée un nouveau bloc dans la chaîne de blocs.
         """
-        self.build_arbre_merkle()
+        self.sauvegarder_transac_json()
         bloc = {
             'index': len(self.chaine) + 1,
             'timestamp': time(),
@@ -245,33 +197,22 @@ class Blockchain:
     @property
     def dernier_bloc(self):
         """
-        Renvoie le dernier bloc de la chaîne.
-
-        Retour:
-            dict: Le dernier bloc.
+        Obtient le dernier bloc ajouté à la chaîne de blocs.
         """
         return self.chaine[-1]
 
     def nouvelle_transaction(self, envoyeur, destinataire, montant):
         """
-        Ajoute une nouvelle transaction à la liste des transactions en attente.
-
-        Variables:
-            envoyeur (str): L'identifiant de l'expéditeur.
-            destinataire (str): L'identifiant du destinataire.
-            montant (float): Le montant de la transaction.
-
-        Retour:
-            int: L'index du prochain bloc (ou None si la transaction a échoué).
+        Ajoute une nouvelle transaction à la liste des transactions courantes.
         """
         if envoyeur not in self.clients or destinataire not in self.clients:
             print("Transaction echouee: Client non trouve.")
             return None
         transaction = {'envoyeur': envoyeur, 'destinataire': destinataire, 'montant': montant}
         self.transactions_courantes.append(transaction)
-        self.sauvegarder_transac_history()  # Sauvegarde des transactions courantes
+        self.sauvegarder_transac_history()  # Sauvegarde des transactions 
         if self.process_transactions():
-            self.build_arbre_merkle()
+            self.sauvegarder_transac_json()
             transaction_verifiee = self.verifier_transaction_dans_arbre_merkle(transaction)
             if transaction_verifiee:
                 print("La transaction a ete verifiee avec succes")
@@ -301,83 +242,73 @@ class Blockchain:
 
     def hash(self, bloc):
         """
-        Calcule le hachage SHA-256 d'un bloc.
-
-        Variables:
-            bloc (dict): Le bloc à hacher.
-
-        Retour:
-            str: Le hachage résultant.
+        Effectue une fonction de hachage SHA-256 sur un bloc donné
         """
         bloc_string = json.dumps(bloc, sort_keys=True).encode()
         return hashlib.sha256(bloc_string).hexdigest()
 
-    def proof_of_work(self, last_proof):
+    def verifier_nonce(self, last_proof):
         """
-        Effectue la preuve de travail (Proof of Work) pour trouver un nouveau proof.
-
-        Variables:
-            last_proof (int): La preuve de travail du dernier bloc.
-
-        Retour:
-            int: Le nouveau proof.
+        Effectue le Proof of Work en trouvant un nombre 'proof' tel que le hash commence par '0000'.
         """
         proof = 0
-        while not self.valider_proof(last_proof, proof):
+        while not self.proof_of_work(last_proof, proof):
             proof += 1
-#           print(proof)  # Incrementation du compteur a chaque essai
         return proof
 
-    @staticmethod
-
-    def valider_proof(last_proof, proof):
+    def proof_of_work(self, last_proof, proof):
         """
-        Valide la preuve de travail en vérifiant que la combinaison de la dernière preuve et de la nouvelle preuve
-        génère un hash commençant par quatre zéros.
-
-        Args:
-            last_proof (int): La preuve précédente.
-            proof (int): La nouvelle preuve.
-
-        Returns:
-            bool: True si la nouvelle preuve est valide, False sinon.
+        Valide le Proof of Work : est-ce que le hash(last_proof, proof) commence par '0000' ?
         """
-        essai = f'{last_proof}{proof}'.encode()
-        essai_hash = hashlib.sha256(essai).hexdigest()
-        return essai_hash[:4] == "0000"
+        guess = f'{last_proof}{proof}'.encode()
+        guess_hash = hashlib.sha256(guess).hexdigest()
+        #print('essai numero', guess)
+        return guess_hash[:4] == "0000"
 
-    def build_arbre_merkle(self):
+    def sauvegarder_transac_json(self):
         """
-        Construit un arbre de Merkle à partir des transactions courantes.
-        Cette méthode convertit chaque transaction courante en une chaîne JSON triée par clés,
-        puis utilise cette liste de transactions pour construire l'arbre de Merkle.
+        Permet de sauvegarder les transactions courantes dans un fichier JSON.
         """
-        transactions = [json.dumps(transac, sort_keys=True) for transac in self.transactions_courantes]
-        self.arbre_merkle.build_arbre(transactions)
+        self.arbre_merkle.build_arbre_merkle([json.dumps(tx) for tx in self.transactions_courantes]) #tx = transaction
 
     def verifier_transaction_dans_arbre_merkle(self, transaction):
         """
-        Vérifie si une transaction donnée se trouve dans l'arbre de Merkle.
-        Args:
-            transaction (dict): La transaction à vérifier.
-        Returns:
-            bool: True si la transaction est présente dans l'arbre de Merkle, False sinon.
+        Vérifie si une transaction existe déjà dans l'arbre de Merkle.
+        Renvoie un booléen indiquant si la transaction est valide.
         """
-        transaction_str = json.dumps(transaction, sort_keys=True)
+        #hashed_transac = transaction + ['transaction' = ] faire en sorte de concatener à la liste les différents hashage des blocs ) l'intérieur de la blockchain
+        transaction_str = json.dumps(transaction)
         return self.arbre_merkle.verifier_transaction(transaction_str)
 
-
 # MAIN
+
 blockchain = Blockchain()
 
-# Ajouter une nouvelle transaction et verifier automatiquement
-index = blockchain.nouvelle_transaction("charles123", "bob", 100)
+add_client1 = blockchain.ajouter_client("charles123", "Charles", 10000)
+add_client2 = blockchain.ajouter_client("bob", "Bob", 20000)
 
+# Ajouter une nouvelle transaction et verifier automatiquement
+index = blockchain.nouvelle_transaction("charles123", "bob", 1000)
+#blockchain.nouvelle_transaction("bob", "charles123", 1000)
+
+# Parcourir tous les blocs dans la blockchain
+for bloc in blockchain.chaine:
+    # Obtenir le hachage du bloc
+    bloc_hash = blockchain.hash(bloc)
+    # Imprimer le hachage du bloc
+    print("Hash du bloc: ", bloc_hash)
+
+print("Transaction ajoutee au bloc: ", index)
 # Proof of Work
 dernier_bloc = blockchain.dernier_bloc
-last_proof = dernier_bloc['proof']  # Récupère la preuve du dernier bloc
-proof = blockchain.proof_of_work(last_proof) # Calcule une nouvelle preuve
+
+last_proof = dernier_bloc['proof']
+proof = blockchain.verifier_nonce(last_proof)
+
+print("Proof of Work trouve: ", proof)
+
 
 # Creer un nouveau bloc
-hash_precedent = blockchain.hash(dernier_bloc) # Calcule le hachage du bloc précédent
-nouveau_bloc_mine = blockchain.nouveau_bloc(proof, hash_precedent) # Crée un nouveau bloc avec la preuve et le hachage précédent
+hash_precedent = blockchain.hash(dernier_bloc)
+nouveau_bloc_mine = blockchain.nouveau_bloc(proof, hash_precedent)
+print("Nouveau bloc mine !", nouveau_bloc_mine)
