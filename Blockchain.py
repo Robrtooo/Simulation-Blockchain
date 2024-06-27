@@ -175,7 +175,7 @@ class Blockchain:
             self.clients[envoyeur].debiter(montant)
             self.clients[destinataire].crediter(montant)
         self.sauvegarder_clients()
-        return True
+        return True # -> Transaction traitée avec succès
 
     def nouveau_bloc(self, proof, hash_precedent=None):
         """
@@ -223,7 +223,7 @@ class Blockchain:
             self.transactions_courantes.pop()
             print("Transaction echouee: Solde insuffisant.")
             return None
-
+        
     def sauvegarder_transac_history(self):
         """
         Sauvegarde l'historique des transactions dans un fichier JSON.
@@ -263,20 +263,19 @@ class Blockchain:
         guess = f'{last_proof}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         #print('essai numero', guess)
-        return guess_hash[:4] == "0000"
+        return guess_hash[:4] == "0000" # Règle de difficulté
 
     def sauvegarder_transac_json(self):
         """
         Permet de sauvegarder les transactions courantes dans un fichier JSON.
         """
-        self.arbre_merkle.build_arbre_merkle([json.dumps(tx) for tx in self.transactions_courantes]) #tx = transaction
+        self.arbre_merkle.build_arbre_merkle([json.dumps(tx) for tx in self.transactions_courantes]) 
 
     def verifier_transaction_dans_arbre_merkle(self, transaction):
         """
         Vérifie si une transaction existe déjà dans l'arbre de Merkle.
         Renvoie un booléen indiquant si la transaction est valide.
         """
-        #hashed_transac = transaction + ['transaction' = ] faire en sorte de concatener à la liste les différents hashage des blocs ) l'intérieur de la blockchain
         transaction_str = json.dumps(transaction)
         return self.arbre_merkle.verifier_transaction(transaction_str)
 
@@ -288,23 +287,19 @@ add_client1 = blockchain.ajouter_client("charles123", "Charles", 10000)
 add_client2 = blockchain.ajouter_client("bob", "Bob", 20000)
 
 # Ajouter une nouvelle transaction et verifier automatiquement
-index = blockchain.nouvelle_transaction("charles123", "bob", 1000)
+index = blockchain.nouvelle_transaction("bob", "charles123", 1000)
 #blockchain.nouvelle_transaction("bob", "charles123", 1000)
 
-# Parcourir tous les blocs dans la blockchain
-for bloc in blockchain.chaine:
-    # Obtenir le hachage du bloc
-    bloc_hash = blockchain.hash(bloc)
-    # Imprimer le hachage du bloc
-    print("Hash du bloc: ", bloc_hash)
 
-print("Transaction ajoutee au bloc: ", index)
-# Proof of Work
+
+
+for bloc in blockchain.chaine:
+    print("Nombre de bloc de la blockchain", index)
 dernier_bloc = blockchain.dernier_bloc
+
 
 last_proof = dernier_bloc['proof']
 proof = blockchain.verifier_nonce(last_proof)
-
 print("Proof of Work trouve: ", proof)
 
 
