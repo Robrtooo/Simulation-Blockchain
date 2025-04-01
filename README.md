@@ -7,5 +7,4 @@ This project is a high-level simulation of a blockchain implemented in Python. I
 - Blockchain Structure: Implements a simple blockchain with linked blocks containing transactions.
 - Proof-of-Work: Simulates mining with a basic proof-of-work consensus mechanism.
 - Cryptographic Security: Uses SHA-256 hashing to secure transactions and blocks.
-- Peer-to-Peer Concept: Simulates a decentralized ledger structure.
 - Transaction Handling: Allows adding transactions and mining new blocks.
