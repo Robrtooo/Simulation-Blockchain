@@ -11,4 +11,6 @@ This project is a high-level simulation of a blockchain implemented in Python. I
 
 ## Installation
 ```bash
-git clone https://github.com/votre-utilisateur/Simulation-Blockchain.git
+git clone https://github.com/Robrtooo/Simulation-Blockchain/tree/main
+
+
